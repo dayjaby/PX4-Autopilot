@@ -59,7 +59,6 @@ template<class T>
 class List
 {
 public:
-
 	void add(T newNode)
 	{
 		newNode->setSibling(getHead());

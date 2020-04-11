@@ -1866,7 +1866,7 @@ Mavlink::task_main(int argc, char *argv[])
 	int temp_int_arg;
 #endif
 
-	while ((ch = px4_getopt(argc, argv, "b:r:d:n:u:o:m:t:c:fwxz", &myoptind, &myoptarg)) != EOF) {
+	while ((ch = px4_getopt(argc, argv, "b:r:d:n:u:o:m:t:c:sfwxz", &myoptind, &myoptarg)) != EOF) {
 		switch (ch) {
 		case 'b':
 			if (px4_get_parameter_value(myoptarg, _baudrate) != 0) {
@@ -2033,6 +2033,10 @@ Mavlink::task_main(int argc, char *argv[])
 
 				break;
 			}
+
+		case 's':
+			_security_on = true;
+			break;
 
 		case 'f':
 			_forwarding_on = true;
@@ -2815,6 +2819,136 @@ Mavlink::display_status_streams()
 }
 
 int
+Mavlink::allow_command(int argc, char *argv[])
+{
+	const char *device_name = DEFAULT_DEVICE_NAME;
+	List<UintValue *> msg_ids;
+	List<UintValue *> cmd_ids;
+#ifdef MAVLINK_UDP
+	char *eptr;
+	int temp_int_arg;
+	unsigned short network_port = 0;
+#endif // MAVLINK_UDP
+	bool provided_device = false;
+	bool provided_network_port = false;
+
+	/*
+	 * Called via main with original argv
+	 *   mavlink start
+	 *
+	 *  Remove 2
+	 */
+	argc -= 2;
+	argv += 2;
+
+	/* don't exit from getopt loop to leave getopt global variables in consistent state,
+	 * set error flag instead */
+	bool err_flag = false;
+
+	int i = 0;
+
+	while (i < argc) {
+
+		if (0 == strcmp(argv[i], "-m") && i < argc - 1) {
+			uint32_t msg_id = strtoul(argv[i + 1], nullptr, 10);
+			msg_ids.add(new UintValue(msg_id));
+			i++;
+
+		} else if (0 == strcmp(argv[i], "-c") && i < argc - 1) {
+			uint32_t cmd_id = strtoul(argv[i + 1], nullptr, 10);
+			cmd_ids.add(new UintValue(cmd_id));
+			i++;
+
+		} else if (0 == strcmp(argv[i], "-d") && i < argc - 1) {
+			provided_device = true;
+			device_name = argv[i + 1];
+			i++;
+#ifdef MAVLINK_UDP
+
+		} else if (0 == strcmp(argv[i], "-u") && i < argc - 1) {
+			provided_network_port = true;
+			temp_int_arg = strtoul(argv[i + 1], &eptr, 10);
+
+			if (*eptr == '\0') {
+				network_port = temp_int_arg;
+
+			} else {
+				err_flag = true;
+			}
+
+			i++;
+#endif // MAVLINK_UDP
+
+		} else {
+			err_flag = true;
+		}
+
+		i++;
+	}
+
+	if (!err_flag) {
+
+		Mavlink *inst = nullptr;
+
+		if (provided_device && !provided_network_port) {
+			inst = get_instance_for_device(device_name);
+
+#ifdef MAVLINK_UDP
+
+		} else if (provided_network_port && !provided_device) {
+			inst = get_instance_for_network_port(network_port);
+#endif // MAVLINK_UDP
+
+		} else if (provided_device && provided_network_port) {
+			PX4_WARN("please provide either a device name or a network port");
+			return 1;
+		}
+
+		if (inst != nullptr) {
+			if (inst->_security_on) {
+				for (const auto msg_id : msg_ids) {
+					inst->_allowed_msg_ids.add(msg_id);
+				}
+				for (const auto cmd_id : cmd_ids) {
+					inst->_allowed_cmd_ids.add(cmd_id);
+				}
+			} else {
+				inst->_allowed_msg_ids.clear();
+				inst->_allowed_cmd_ids.clear();
+				PX4_WARN("This mavlink instance is not secure. Start the instance with the -s flag");
+			}
+
+		} else {
+			inst->_allowed_msg_ids.clear();
+			inst->_allowed_cmd_ids.clear();
+
+			// If the link is not running we should complain, but not fall over
+			// because this is so easy to get wrong and not fatal. Warning is sufficient.
+			if (provided_device) {
+				PX4_WARN("mavlink for device %s is not running", device_name);
+
+			}
+
+#ifdef MAVLINK_UDP
+
+			else {
+				PX4_WARN("mavlink for network on port %hu is not running", network_port);
+			}
+
+#endif // MAVLINK_UDP
+
+			return 1;
+		}
+
+	} else {
+		usage();
+		return 1;
+	}
+
+	return OK;
+}
+
+int
 Mavlink::stream_command(int argc, char *argv[])
 {
 	const char *device_name = DEFAULT_DEVICE_NAME;
@@ -2992,6 +3126,7 @@ $ mavlink stream -u 14556 -s HIGHRES_IMU -r 50
 #if defined(CONFIG_NET_IGMP) && defined(CONFIG_NET_ROUTE)
 	PRINT_MODULE_USAGE_PARAM_STRING('c', nullptr, "Multicast address in the range [239.0.0.0,239.255.255.255]", "Multicast address (multicasting can be enabled via MAV_BROADCAST param)", true);
 #endif
+	PRINT_MODULE_USAGE_PARAM_FLAG('s', "Enable security", true);
 	PRINT_MODULE_USAGE_PARAM_FLAG('f', "Enable message forwarding to other Mavlink instances", true);
 	PRINT_MODULE_USAGE_PARAM_FLAG('w', "Wait to send, until first message received", true);
 	PRINT_MODULE_USAGE_PARAM_FLAG('x', "Enable FTP", true);
@@ -3001,6 +3136,15 @@ $ mavlink stream -u 14556 -s HIGHRES_IMU -r 50
 
 	PRINT_MODULE_USAGE_COMMAND_DESCR("status", "Print status for all instances");
 	PRINT_MODULE_USAGE_ARG("streams", "Print all enabled streams", true);
+
+	PRINT_MODULE_USAGE_COMMAND_DESCR("allow", "Allow receiving certain message and command ids");
+	PRINT_MODULE_USAGE_PARAM_INT('m', 0, 0, 65536, "Allow this message id (can be used multiple times)", true);
+	PRINT_MODULE_USAGE_PARAM_INT('c', 0, 0, 65536, "Allow this command id (can be used multiple times)", true);
+#if defined(CONFIG_NET) || defined(__PX4_POSIX)
+	PRINT_MODULE_USAGE_PARAM_INT('u', -1, 0, 65536, "Select Mavlink instance via local Network Port", true);
+#endif
+	PRINT_MODULE_USAGE_PARAM_STRING('d', nullptr, "<file:dev>", "Select Mavlink instance via Serial Device", true);
+	PRINT_MODULE_USAGE_PARAM_STRING('s', nullptr, nullptr, "Mavlink stream to configure", false);
 
 	PRINT_MODULE_USAGE_COMMAND_DESCR("stream", "Configure the sending rate of a stream for a running instance");
 #if defined(CONFIG_NET) || defined(__PX4_POSIX)
@@ -3039,6 +3183,9 @@ int mavlink_main(int argc, char *argv[])
 
 	} else if (!strcmp(argv[1], "stream")) {
 		return Mavlink::stream_command(argc, argv);
+
+	} else if (!strcmp(argv[1], "allow")) {
+		return Mavlink::allow_command(argc, argv);
 
 	} else if (!strcmp(argv[1], "boot_complete")) {
 		Mavlink::set_boot_complete();

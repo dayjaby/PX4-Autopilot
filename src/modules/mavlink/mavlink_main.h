@@ -95,6 +95,12 @@ enum Protocol {
 
 using namespace time_literals;
 
+struct UintValue : public ListNode<UintValue*>
+{
+	UintValue(uint32_t v) : value(v) {}
+	uint32_t value;
+};
+
 class Mavlink : public ModuleParams
 {
 
@@ -125,6 +131,8 @@ public:
 	 * Display the status of all enabled streams.
 	 */
 	void			display_status_streams();
+
+	static int		allow_command(int argc, char *argv[]);
 
 	static int		stream_command(int argc, char *argv[]);
 
@@ -523,6 +531,10 @@ public:
 	 */
 	struct ping_statistics_s &get_ping_statistics() { return _ping_stats; }
 
+	bool                    _security_on{false};
+        List<UintValue *>      _allowed_msg_ids;
+        List<UintValue *>      _allowed_cmd_ids;
+
 protected:
 	Mavlink			*next{nullptr};
 
@@ -573,7 +585,6 @@ private:
 
 	bool			_forwarding_on{false};
 	bool			_ftp_on{false};
-
 	int			_uart_fd{-1};
 
 	int			_baudrate{57600};
