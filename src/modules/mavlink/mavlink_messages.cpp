@@ -2492,7 +2492,7 @@ public:
 
 	static uint16_t get_id_static()
 	{
-		return MAVLINK_MSG_ID_VIBRATION;
+		return MAVLINK_MSG_ID_ESTIMATOR_STATUS;
 	}
 
 	uint16_t get_id()
@@ -2507,7 +2507,7 @@ public:
 
 	unsigned get_size()
 	{
-		return MAVLINK_MSG_ID_VIBRATION_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
+		return MAVLINK_MSG_ID_ESTIMATOR_STATUS_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
 	}
 
 private:
