@@ -2253,7 +2253,7 @@ Commander::run()
 
 				if (failure_status != 0 && !status_flags.circuit_breaker_flight_termination_disabled) {
 
-					// TODO: set force_failsafe flag
+					armed.force_failsafe = true;
 
 					if (!_failure_detector_termination_printed) {
 						mavlink_log_critical(&mavlink_log_pub, "Attitude failure detected! Enforcing failsafe");
