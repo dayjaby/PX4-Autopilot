@@ -543,7 +543,6 @@ void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const 
 			orb_publish(ORB_ID(actuator_controls_2), _actuator_controls_pubs[2], &actuator_controls);
 		}
 
-
 	} else {
 
 		send_ack = false;

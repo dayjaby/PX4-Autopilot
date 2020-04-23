@@ -42,6 +42,11 @@ then
 
 	# Indicate that FW roll direction was fixed in mixer, to be removed in v1.10
 	param set V19_VT_ROLLDIR 0
+
+	param set NAV_DLL_ACT 0
+	param set NAV_RCL_ACT 0
+	param set MIS_DIST_1WP 0
+	param set MIS_DIST_WPS 0
 fi
 
 set MAV_TYPE 22

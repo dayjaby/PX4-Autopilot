@@ -9,5 +9,13 @@
 
 sh /etc/init.d/rc.mc_defaults
 
+if [ $AUTOCNF = yes ]
+then
+	param set NAV_DLL_ACT 0
+	param set NAV_RCL_ACT 0
+	param set MIS_DIST_1WP 0
+	param set MIS_DIST_WPS 0
+fi
+
 set MIXER quad_w
 

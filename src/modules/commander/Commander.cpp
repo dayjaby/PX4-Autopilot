@@ -75,6 +75,9 @@
 #include <px4_time.h>
 #include <circuit_breaker/circuit_breaker.h>
 #include <systemlib/mavlink_log.h>
+#include <matrix/math.hpp>
+
+using matrix::wrap_2pi;
 
 #include <cmath>
 #include <float.h>
@@ -874,11 +877,12 @@ Commander::handle_command(vehicle_status_s *status_local, const vehicle_command_
 				}
 
 			} else {
+				const double yaw = wrap_2pi(math::radians(cmd.param4));
 				const double lat = cmd.param5;
 				const double lon = cmd.param6;
 				const float alt = cmd.param7;
 
-				if (PX4_ISFINITE(lat) && PX4_ISFINITE(lon) && PX4_ISFINITE(alt)) {
+				if (PX4_ISFINITE(yaw) && PX4_ISFINITE(lat) && PX4_ISFINITE(lon) && PX4_ISFINITE(alt)) {
 					const vehicle_local_position_s &local_pos = _local_position_sub.get();
 
 					if (local_pos.xy_global && local_pos.z_global) {
@@ -889,6 +893,7 @@ Commander::handle_command(vehicle_status_s *status_local, const vehicle_command_
 						home.lat = lat;
 						home.lon = lon;
 						home.alt = alt;
+						home.yaw = yaw;
 
 						home.manual_home = true;
 						home.valid_alt = true;

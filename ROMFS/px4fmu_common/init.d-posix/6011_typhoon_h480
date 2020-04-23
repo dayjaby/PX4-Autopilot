@@ -21,6 +21,11 @@ then
 	param set TRIG_MODE 4
 	param set MNT_MODE_IN 0
 	param set MAV_PROTO_VER 2
+
+	param set NAV_DLL_ACT 0
+	param set NAV_RCL_ACT 0
+	param set MIS_DIST_1WP 0
+	param set MIS_DIST_WPS 0
 fi
 
 set MAV_TYPE 13
