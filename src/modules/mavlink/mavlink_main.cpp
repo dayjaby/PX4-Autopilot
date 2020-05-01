@@ -1621,7 +1621,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("ATTITUDE_QUATERNION", 50.0f);
 		configure_stream_local("ATTITUDE_TARGET", 10.0f);
 		configure_stream_local("BATTERY_STATUS", 0.5f);
-		configure_stream_local("CAMERA_CAPTURE", 2.0f);
+		// configure_stream_local("CAMERA_CAPTURE", 2.0f);
 		configure_stream_local("CAMERA_IMAGE_CAPTURED", unlimited_rate);
 		configure_stream_local("COLLISION", unlimited_rate);
 		configure_stream_local("DEBUG", 10.0f);
