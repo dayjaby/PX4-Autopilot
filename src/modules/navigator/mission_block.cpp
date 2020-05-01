@@ -441,7 +441,8 @@ MissionBlock::issue_command(const mission_item_s &item)
 
 		// params[0] actuator number to be set 0..5 (corresponds to AUX outputs 1..6)
 		// params[1] new value for selected actuator in ms 900...2000
-		actuators.control[(int)item.params[0]] = 1.0f / 2000 * -item.params[1];
+		// actuators.control[(int)item.params[0]] = 1.0f / 2000 * -item.params[1];
+		actuators.control[(int)item.params[0]] = item.params[1] / 50.f - 1.0f;
 
 		if (_actuator_pub != nullptr) {
 			orb_publish(ORB_ID(actuator_controls_2), _actuator_pub, &actuators);
@@ -450,33 +451,32 @@ MissionBlock::issue_command(const mission_item_s &item)
 			_actuator_pub = orb_advertise(ORB_ID(actuator_controls_2), &actuators);
 		}
 
-	} else {
-		_action_start = hrt_absolute_time();
-
-		// mission_item -> vehicle_command
-
-		// we're expecting a mission command item here so assign the "raw" inputs to the command
-		// (MAV_FRAME_MISSION mission item)
-		vehicle_command_s vcmd = {};
-		vcmd.command = item.nav_cmd;
-		vcmd.param1 = item.params[0];
-		vcmd.param2 = item.params[1];
-		vcmd.param3 = item.params[2];
-		vcmd.param4 = item.params[3];
-
-		if (item.nav_cmd == NAV_CMD_DO_SET_ROI_LOCATION && item.altitude_is_relative) {
-			vcmd.param5 = item.lat;
-			vcmd.param6 = item.lon;
-			vcmd.param7 = item.altitude + _navigator->get_home_position()->alt;
-
-		} else {
-			vcmd.param5 = (double)item.params[4];
-			vcmd.param6 = (double)item.params[5];
-			vcmd.param7 = item.params[6];
-		}
-
-		_navigator->publish_vehicle_cmd(&vcmd);
 	}
+	_action_start = hrt_absolute_time();
+
+	// mission_item -> vehicle_command
+
+	// we're expecting a mission command item here so assign the "raw" inputs to the command
+	// (MAV_FRAME_MISSION mission item)
+	vehicle_command_s vcmd = {};
+	vcmd.command = item.nav_cmd;
+	vcmd.param1 = item.params[0];
+	vcmd.param2 = item.params[1];
+	vcmd.param3 = item.params[2];
+	vcmd.param4 = item.params[3];
+
+	if (item.nav_cmd == NAV_CMD_DO_SET_ROI_LOCATION && item.altitude_is_relative) {
+		vcmd.param5 = item.lat;
+		vcmd.param6 = item.lon;
+		vcmd.param7 = item.altitude + _navigator->get_home_position()->alt;
+
+	} else {
+		vcmd.param5 = (double)item.params[4];
+		vcmd.param6 = (double)item.params[5];
+		vcmd.param7 = item.params[6];
+	}
+
+	_navigator->publish_vehicle_cmd(&vcmd);
 }
 
 float
