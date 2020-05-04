@@ -9,9 +9,5 @@
 
 sh /etc/init.d/rc.mc_defaults
 
-if [ $AUTOCNF = yes ]
-then
-fi
-
 set MIXER quad_w
 
