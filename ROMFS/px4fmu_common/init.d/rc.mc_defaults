@@ -11,7 +11,7 @@ if [ $AUTOCNF = yes ]
 then
 	param set NAV_ACC_RAD 2
 
-	param set RTL_RETURN_ALT 30
+	param set RTL_RETURN_ALT 50
 	param set RTL_DESCEND_ALT 10
 	param set RTL_LAND_DELAY 0
 
@@ -21,6 +21,13 @@ then
 
 	param set GPS_UBX_DYNMODEL 6
 fi
+
+# have those parameters for all HPA copters
+param set NAV_DLL_ACT 15
+param set NAV_RCL_ACT 0
+param set MPC_SPOOLUP_TIME 5
+param set MIS_DIST_1WP 0
+param set MIS_DIST_WPS 0
 
 #
 # This is the gimbal pass mixer.
