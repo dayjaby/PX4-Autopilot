@@ -432,26 +432,6 @@ MissionBlock::issue_command(const mission_item_s &item)
 		return;
 	}
 
-	if (item.nav_cmd == NAV_CMD_DO_SET_SERVO) {
-		PX4_INFO("DO_SET_SERVO command");
-
-		// XXX: we should issue a vehicle command and handle this somewhere else
-		actuator_controls_s actuators = {};
-		actuators.timestamp = hrt_absolute_time();
-
-		// params[0] actuator number to be set 0..5 (corresponds to AUX outputs 1..6)
-		// params[1] new value for selected actuator in ms 900...2000
-		// actuators.control[(int)item.params[0]] = 1.0f / 2000 * -item.params[1];
-		actuators.control[(int)item.params[0]] = item.params[1] / 50.f - 1.0f;
-
-		if (_actuator_pub != nullptr) {
-			orb_publish(ORB_ID(actuator_controls_2), _actuator_pub, &actuators);
-
-		} else {
-			_actuator_pub = orb_advertise(ORB_ID(actuator_controls_2), &actuators);
-		}
-
-	}
 	_action_start = hrt_absolute_time();
 
 	// mission_item -> vehicle_command

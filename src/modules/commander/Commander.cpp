@@ -1056,6 +1056,23 @@ Commander::handle_command(vehicle_status_s *status_local, const vehicle_command_
 		main_state_transition(*status_local, commander_state_s::MAIN_STATE_ORBIT, status_flags, &internal_state);
 		break;
 
+	case vehicle_command_s::VEHICLE_CMD_DO_SET_SERVO: {
+
+			struct actuator_controls_s actuator_controls = {};
+			actuator_controls.timestamp = hrt_absolute_time();
+
+			for (size_t i = 0; i < 8; i++) {
+				actuator_controls.control[i] = NAN;
+			}
+
+			// scale 0 to 2000 to -1 to 1
+			actuator_controls.control[(int)cmd.param1] = 1.0f / 1000 * cmd.param2 - 1.0f;
+			cmd_result = vehicle_command_s::VEHICLE_CMD_RESULT_ACCEPTED;
+			orb_advertise(ORB_ID(actuator_controls_2), &actuator_controls);
+		}
+
+		break;
+
 	case vehicle_command_s::VEHICLE_CMD_SET_CAMERA_ZOOM: {
 			struct actuator_controls_s actuator_controls = {};
 			actuator_controls.timestamp = hrt_absolute_time();
