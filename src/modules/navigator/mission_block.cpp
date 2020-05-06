@@ -492,6 +492,7 @@ MissionBlock::issue_command(const mission_item_s &item)
 		} else {*/
 		// _vehicle_roi_pub =
 		orb_advertise(ORB_ID(vehicle_roi), &_vroi);
+		return;
 	} else {
 		vcmd.param5 = (double)item.params[4];
 		vcmd.param6 = (double)item.params[5];
