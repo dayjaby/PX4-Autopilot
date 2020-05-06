@@ -445,10 +445,12 @@ MissionBlock::issue_command(const mission_item_s &item)
 	vcmd.param3 = item.params[2];
 	vcmd.param4 = item.params[3];
 
-	if (item.nav_cmd == NAV_CMD_DO_SET_ROI_LOCATION && item.altitude_is_relative) {
+	if (item.nav_cmd == NAV_CMD_DO_SET_ROI_LOCATION) {
 		vcmd.param5 = item.lat;
 		vcmd.param6 = item.lon;
-		vcmd.param7 = item.altitude + _navigator->get_home_position()->alt;
+		vcmd.param7 = item.altitude;
+		if (item.altitude_is_relative)
+			vcmd.param7 += _navigator->get_home_position()->alt;
 
 	} else {
 		vcmd.param5 = (double)item.params[4];
