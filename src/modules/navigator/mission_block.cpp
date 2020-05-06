@@ -52,6 +52,7 @@
 #include <uORB/uORB.h>
 #include <uORB/topics/actuator_controls.h>
 #include <uORB/topics/vehicle_command.h>
+#include <uORB/topics/vehicle_roi.h>
 #include <uORB/topics/vtol_vehicle_status.h>
 
 using matrix::wrap_pi;
@@ -493,6 +494,45 @@ MissionBlock::issue_command(const mission_item_s &item)
 		if (item.altitude_is_relative)
 			vcmd.param7 += _navigator->get_home_position()->alt;
 
+		vehicle_roi_s _vroi = {};
+
+		switch (item.nav_cmd) {
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_LOCATION:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_LOCATION;
+			_vroi.lat = vcmd.param5;
+			_vroi.lon = vcmd.param6;
+			_vroi.alt = vcmd.param7;
+			break;
+		/*case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI:
+		case vehicle_command_s::VEHICLE_CMD_NAV_ROI:
+			_vroi.mode = cmd.param1;
+			break;
+
+
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_WPNEXT_OFFSET:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_WPNEXT;
+			_vroi.pitch_offset = (float)cmd.param5 * M_DEG_TO_RAD_F;
+			_vroi.roll_offset = (float)cmd.param6 * M_DEG_TO_RAD_F;
+			_vroi.yaw_offset = (float)cmd.param7 * M_DEG_TO_RAD_F;
+			break;
+
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_NONE:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_NONE;
+			break;
+
+		default:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_NONE;
+			break;*/
+		}
+
+		_vroi.timestamp = hrt_absolute_time();
+
+		/* if (_vehicle_roi_pub != nullptr) {
+			orb_publish(ORB_ID(vehicle_roi), _vehicle_roi_pub, &_vroi);
+
+		} else {*/
+		// _vehicle_roi_pub =
+		orb_advertise(ORB_ID(vehicle_roi), &_vroi);
 	} else {
 		vcmd.param5 = (double)item.params[4];
 		vcmd.param6 = (double)item.params[5];

@@ -50,6 +50,7 @@
 #include <uORB/topics/mission.h>
 #include <uORB/topics/position_setpoint_triplet.h>
 #include <uORB/topics/vehicle_command.h>
+#include <uORB/topics/vehicle_roi.h>
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/vtol_vehicle_status.h>
 
