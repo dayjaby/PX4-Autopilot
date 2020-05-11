@@ -46,6 +46,7 @@
 // publications
 #include <uORB/Publication.hpp>
 #include <uORB/topics/actuator_armed.h>
+#include <uORB/topics/actuator_controls.h>
 #include <uORB/topics/home_position.h>
 #include <uORB/topics/vehicle_status.h>
 
@@ -241,6 +242,7 @@ private:
 	Subscription<vehicle_local_position_s>		_local_position_sub{ORB_ID(vehicle_local_position)};
 
 	Publication<home_position_s>			_home_pub{ORB_ID(home_position)};
+	Publication<actuator_controls_s>		_actuator_controls_2_pub{ORB_ID(actuator_controls_2)};
 
 	orb_advert_t					_status_pub{nullptr};
 };

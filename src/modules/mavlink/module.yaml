@@ -8,6 +8,10 @@ serial_config:
         then
             set MAV_ARGS "${MAV_ARGS} -f"
         fi
+        if param compare MAV_${i}_SECURE 1
+        then
+            set MAV_ARGS "${MAV_ARGS} -s"
+        fi
         mavlink start -d ${SERIAL_DEV} ${MAV_ARGS} -x
       port_config_param:
         name: MAV_${i}_CONFIG
@@ -77,3 +81,13 @@ parameters:
             num_instances: *max_num_config_instances
             default: [true, false, false]
 
+        MAV_${i}_SECURE:
+            description:
+                short: Run MAVLink in security mode for instance ${i}
+                long: |
+                    If enabled, incoming MAVLink messages are filtered.
+
+            type: boolean
+            reboot_required: true
+            num_instances: *max_num_config_instances
+            default: [true, false, true]

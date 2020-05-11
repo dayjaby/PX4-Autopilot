@@ -499,24 +499,6 @@ void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const 
 		if ((int)(cmd_mavlink.param2 + 0.5f) == 1) {
 			send_storage_information(cmd_mavlink.param1 + 0.5f);
 		}
-	} else if (cmd_mavlink.command == MAV_CMD_SET_CAMERA_ZOOM) {
-		struct actuator_controls_s actuator_controls = {};
-		actuator_controls.timestamp = hrt_absolute_time();
-		for (size_t i = 0; i < 8; i++) {
-			actuator_controls.control[i] = NAN;
-		}
-
-		if ((int)(cmd_mavlink.param1 + 0.5f) == 2) {
-			actuator_controls.control[4] = cmd_mavlink.param2 / 50.0f - 1.0f;
-		} else {
-			send_ack = false;
-		}
-
-		if (_actuator_controls_pubs[2] == nullptr) {
-			_actuator_controls_pubs[2] = orb_advertise(ORB_ID(actuator_controls_2), &actuator_controls);
-                } else {
-			orb_publish(ORB_ID(actuator_controls_2), _actuator_controls_pubs[2], &actuator_controls);
-                }
 
 	} else {
 
@@ -2669,6 +2651,39 @@ MavlinkReceiver::receive_thread(void *arg)
 							/* this will only switch to proto version 2 if allowed in settings */
 							_mavlink->set_proto_version(2);
 						}
+
+						if (_mavlink->_security_on) {
+							if (msg.msgid == MAVLINK_MSG_ID_COMMAND_LONG || msg.msgid == MAVLINK_MSG_ID_COMMAND_INT) {
+								uint16_t command;
+								if (msg.msgid == MAVLINK_MSG_ID_COMMAND_LONG) {
+									mavlink_command_long_t cmd_mavlink;
+									mavlink_msg_command_long_decode(&msg, &cmd_mavlink);
+									command = cmd_mavlink.command;
+								} else {
+									mavlink_command_int_t cmd_mavlink;
+									mavlink_msg_command_int_decode(&msg, &cmd_mavlink);
+									command = cmd_mavlink.command;
+								}
+								bool is_allowed = false;
+								for (const auto &cmd_id : _mavlink->_allowed_cmd_ids) {
+									is_allowed |= (command == cmd_id->value);
+								}
+								if (!is_allowed) {
+									/* we did not allow receiving this command id from this instance, so we discard it */
+									continue;
+								}
+							} else {
+								bool is_allowed = false;
+								for (const auto &msg_id : _mavlink->_allowed_msg_ids) {
+									is_allowed |= (msg.msgid == msg_id->value);
+								}
+								if (!is_allowed) {
+									/* we did not allow receiving this message id from this instance, so we discard it */
+									continue;
+								}
+							}
+						}
+
 
 						/* handle generic messages and commands */
 						handle_message(&msg);

@@ -52,6 +52,7 @@
 #include <uORB/uORB.h>
 #include <uORB/topics/actuator_controls.h>
 #include <uORB/topics/vehicle_command.h>
+#include <uORB/topics/vehicle_roi.h>
 #include <uORB/topics/vtol_vehicle_status.h>
 
 using matrix::wrap_pi;
@@ -93,6 +94,7 @@ MissionBlock::is_mission_item_reached()
 	case NAV_CMD_IMAGE_STOP_CAPTURE:
 	case NAV_CMD_VIDEO_START_CAPTURE:
 	case NAV_CMD_VIDEO_STOP_CAPTURE:
+	case NAV_CMD_DO_ORBIT:
 	case NAV_CMD_DO_CONTROL_VIDEO:
 	case NAV_CMD_DO_MOUNT_CONFIGURE:
 	case NAV_CMD_DO_MOUNT_CONTROL:
@@ -224,7 +226,7 @@ MissionBlock::is_mission_item_reached()
 			 * Therefore the item is marked as reached once the system reaches the loiter
 			 * radius (+ some margin). Time inside and turn count is handled elsewhere.
 			 */
-			if (dist >= 0.0f && dist <= _navigator->get_acceptance_radius(fabsf(_mission_item.loiter_radius) * 1.2f)
+			if (dist >= 0.0f && dist <= _navigator->get_acceptance_radius(fabsf(_navigator->get_loiter_radius()) * 1.2f)
 			    && dist_z <= _navigator->get_altitude_acceptance_radius()) {
 
 				_waypoint_position_reached = true;
@@ -431,51 +433,73 @@ MissionBlock::issue_command(const mission_item_s &item)
 		return;
 	}
 
-	if (item.nav_cmd == NAV_CMD_DO_SET_SERVO) {
-		PX4_INFO("DO_SET_SERVO command");
+	_action_start = hrt_absolute_time();
 
-		// XXX: we should issue a vehicle command and handle this somewhere else
-		actuator_controls_s actuators = {};
-		actuators.timestamp = hrt_absolute_time();
+	// mission_item -> vehicle_command
 
-		// params[0] actuator number to be set 0..5 (corresponds to AUX outputs 1..6)
-		// params[1] new value for selected actuator in ms 900...2000
-		actuators.control[(int)item.params[0]] = 1.0f / 2000 * -item.params[1];
+	// we're expecting a mission command item here so assign the "raw" inputs to the command
+	// (MAV_FRAME_MISSION mission item)
+	vehicle_command_s vcmd = {};
+	vcmd.command = item.nav_cmd;
+	vcmd.param1 = item.params[0];
+	vcmd.param2 = item.params[1];
+	vcmd.param3 = item.params[2];
+	vcmd.param4 = item.params[3];
 
-		if (_actuator_pub != nullptr) {
-			orb_publish(ORB_ID(actuator_controls_2), _actuator_pub, &actuators);
+	if (item.nav_cmd == NAV_CMD_DO_SET_ROI_LOCATION) {
+		vcmd.param5 = item.lat;
+		vcmd.param6 = item.lon;
+		vcmd.param7 = item.altitude;
+		if (item.altitude_is_relative)
+			vcmd.param7 += _navigator->get_home_position()->alt;
 
-		} else {
-			_actuator_pub = orb_advertise(ORB_ID(actuator_controls_2), &actuators);
+		vehicle_roi_s _vroi = {};
+
+		switch (item.nav_cmd) {
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_LOCATION:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_LOCATION;
+			_vroi.lat = vcmd.param5;
+			_vroi.lon = vcmd.param6;
+			_vroi.alt = vcmd.param7;
+			break;
+		/*case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI:
+		case vehicle_command_s::VEHICLE_CMD_NAV_ROI:
+			_vroi.mode = cmd.param1;
+			break;
+
+
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_WPNEXT_OFFSET:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_WPNEXT;
+			_vroi.pitch_offset = (float)cmd.param5 * M_DEG_TO_RAD_F;
+			_vroi.roll_offset = (float)cmd.param6 * M_DEG_TO_RAD_F;
+			_vroi.yaw_offset = (float)cmd.param7 * M_DEG_TO_RAD_F;
+			break;
+
+		case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_NONE:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_NONE;
+			break;
+
+		default:
+			_vroi.mode = vehicle_command_s::VEHICLE_ROI_NONE;
+			break;*/
 		}
 
+		_vroi.timestamp = hrt_absolute_time();
+
+		/* if (_vehicle_roi_pub != nullptr) {
+			orb_publish(ORB_ID(vehicle_roi), _vehicle_roi_pub, &_vroi);
+
+		} else {*/
+		// _vehicle_roi_pub =
+		orb_advertise(ORB_ID(vehicle_roi), &_vroi);
+		return;
 	} else {
-		_action_start = hrt_absolute_time();
-
-		// mission_item -> vehicle_command
-
-		// we're expecting a mission command item here so assign the "raw" inputs to the command
-		// (MAV_FRAME_MISSION mission item)
-		vehicle_command_s vcmd = {};
-		vcmd.command = item.nav_cmd;
-		vcmd.param1 = item.params[0];
-		vcmd.param2 = item.params[1];
-		vcmd.param3 = item.params[2];
-		vcmd.param4 = item.params[3];
-
-		if (item.nav_cmd == NAV_CMD_DO_SET_ROI_LOCATION && item.altitude_is_relative) {
-			vcmd.param5 = item.lat;
-			vcmd.param6 = item.lon;
-			vcmd.param7 = item.altitude + _navigator->get_home_position()->alt;
-
-		} else {
-			vcmd.param5 = (double)item.params[4];
-			vcmd.param6 = (double)item.params[5];
-			vcmd.param7 = item.params[6];
-		}
-
-		_navigator->publish_vehicle_cmd(&vcmd);
+		vcmd.param5 = (double)item.params[4];
+		vcmd.param6 = (double)item.params[5];
+		vcmd.param7 = item.params[6];
 	}
+
+	_navigator->publish_vehicle_cmd(&vcmd);
 }
 
 float
