@@ -127,6 +127,16 @@ MissionBlock::is_mission_item_reached()
 	case NAV_CMD_DO_SET_HOME:
 		return true;
 
+	case NAV_CMD_DELAY: 
+		{
+			struct position_setpoint_s *curr_sp = &_navigator->get_position_setpoint_triplet()->current;
+			if (curr_sp->type != position_setpoint_s::SETPOINT_TYPE_LOITER) {
+				curr_sp->type = position_setpoint_s::SETPOINT_TYPE_LOITER;
+				curr_sp->alt += 0.01f;
+				_navigator->set_position_setpoint_triplet_updated();
+			}
+			break;
+		}
 	default:
 		/* do nothing, this is a 3D waypoint */
 		break;
