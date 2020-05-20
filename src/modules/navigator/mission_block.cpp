@@ -325,6 +325,16 @@ MissionBlock::is_mission_item_reached()
 			_waypoint_position_reached = true;
 			_waypoint_yaw_reached = true;
 			_time_wp_reached = now;
+			_navigator->get_position_setpoint_triplet()->current.alt += 0.01f;
+			_navigator->get_position_setpoint_triplet()->next.valid = false;
+			_navigator->get_position_setpoint_triplet()->next.lat = NAN;
+			_navigator->get_position_setpoint_triplet()->next.lon = NAN;
+			_navigator->get_position_setpoint_triplet()->next.alt = NAN;
+			_navigator->get_position_setpoint_triplet()->previous.valid = false;
+			_navigator->get_position_setpoint_triplet()->previous.lat = NAN;
+			_navigator->get_position_setpoint_triplet()->previous.lon = NAN;
+			_navigator->get_position_setpoint_triplet()->previous.alt = NAN;
+			_navigator->set_position_setpoint_triplet_updated();
 
 		} else {
 			/* for normal mission items used their acceptance radius */
