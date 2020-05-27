@@ -1,0 +1,145 @@
+From f0ac8681db9b2345c70a68ee33e72d2bc02d6bc2 Mon Sep 17 00:00:00 2001
+From: David Jablonski <dayjaby@gmail.com>
+Date: Tue, 19 May 2020 09:16:42 +0000
+Subject: [PATCH 1/3] prevent flyaway during landing
+
+---
+ src/lib/FlightTasks/tasks/AutoMapper/FlightTaskAutoMapper.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/lib/FlightTasks/tasks/AutoMapper/FlightTaskAutoMapper.cpp b/src/lib/FlightTasks/tasks/AutoMapper/FlightTaskAutoMapper.cpp
+index 20c65e5978..885bd8c0d0 100644
+--- a/src/lib/FlightTasks/tasks/AutoMapper/FlightTaskAutoMapper.cpp
++++ b/src/lib/FlightTasks/tasks/AutoMapper/FlightTaskAutoMapper.cpp
+@@ -122,7 +122,6 @@ void FlightTaskAutoMapper::_generateLandSetpoints()
+ 	_position_setpoint = Vector3f(_target(0), _target(1), NAN);
+ 	_velocity_setpoint = Vector3f(Vector3f(NAN, NAN, _param_mpc_land_speed.get()));
+ 	// set constraints
+-	_constraints.tilt = math::radians(_param_mpc_tiltmax_lnd.get());
+ 	_constraints.speed_down = _param_mpc_land_speed.get();
+ 	_gear.landing_gear = landing_gear_s::GEAR_DOWN;
+ }
+-- 
+2.17.1
+
+
+From 3a743e3bd8fd9061b8acdc74e6187104f79d3783 Mon Sep 17 00:00:00 2001
+From: David Jablonski <dayjaby@gmail.com>
+Date: Wed, 20 May 2020 05:14:14 +0000
+Subject: [PATCH 2/3] https://github.com/PX4/Firmware/pull/14919
+
+---
+ launch/px4.launch | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/launch/px4.launch b/launch/px4.launch
+index 74ab5b0ab5..e2fbed86e5 100644
+--- a/launch/px4.launch
++++ b/launch/px4.launch
+@@ -11,8 +11,8 @@
+ 
+     <env name="PX4_SIM_MODEL" value="$(arg vehicle)" />
+     <env name="PX4_ESTIMATOR" value="$(arg est)" />
+-    <arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+-    <arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
++    <arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
++    <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
+     <node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) $(arg px4_command_arg1)">
+     </node>
+ </launch>
+-- 
+2.17.1
+
+
+From b86e8a60eeb8b610eda133eef207186fb25e16a9 Mon Sep 17 00:00:00 2001
+From: David Jablonski <dayjaby@gmail.com>
+Date: Wed, 27 May 2020 10:47:17 +0000
+Subject: [PATCH 3/3] added vehicle_command_gimbal topic
+
+---
+ msg/vehicle_command.msg                  |  2 ++
+ src/modules/mavlink/mavlink_messages.cpp | 17 ++++++++++++++++-
+ src/modules/vmount/output_mavlink.cpp    |  6 +++---
+ 3 files changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/msg/vehicle_command.msg b/msg/vehicle_command.msg
+index 9909910a32..7d368bf465 100644
+--- a/msg/vehicle_command.msg
++++ b/msg/vehicle_command.msg
+@@ -120,3 +120,5 @@ uint8 source_system		# System sending the command
+ uint8 source_component		# Component sending the command
+ uint8 confirmation		# 0: First transmission of this command. 1-255: Confirmation transmissions (e.g. for kill command)
+ bool from_external
++
++# TOPICS vehicle_command vehicle_command_gimbal
+diff --git a/src/modules/mavlink/mavlink_messages.cpp b/src/modules/mavlink/mavlink_messages.cpp
+index 2efb08b693..bec6a9697a 100644
+--- a/src/modules/mavlink/mavlink_messages.cpp
++++ b/src/modules/mavlink/mavlink_messages.cpp
+@@ -472,6 +472,7 @@ public:
+ 
+ private:
+ 	MavlinkOrbSubscription *_cmd_sub;
++	MavlinkOrbSubscription *_cmd_gimbal_sub;
+ 
+ 	/* do not allow top copying this class */
+ 	MavlinkStreamCommandLong(MavlinkStreamCommandLong &) = delete;
+@@ -479,7 +480,8 @@ private:
+ 
+ protected:
+ 	explicit MavlinkStreamCommandLong(Mavlink *mavlink) : MavlinkStream(mavlink),
+-		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command), 0, true))
++		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command), 0, true)),
++		_cmd_gimbal_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command_gimbal), 0, true))
+ 	{}
+ 
+ 	bool send(const hrt_abstime t)
+@@ -500,6 +502,19 @@ protected:
+ 			}
+ 		}
+ 
++		if (_cmd_gimbal_sub->update_if_changed(&cmd)) {
++
++			if (!cmd.from_external) {
++				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
++
++				MavlinkCommandSender::instance().handle_vehicle_command(cmd, _mavlink->get_channel());
++				sent = true;
++
++			} else {
++				PX4_DEBUG("not forwarding command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
++			}
++		}
++
+ 		MavlinkCommandSender::instance().check_timeout(_mavlink->get_channel());
+ 
+ 		return sent;
+diff --git a/src/modules/vmount/output_mavlink.cpp b/src/modules/vmount/output_mavlink.cpp
+index 7bdc9a65a2..9111face92 100644
+--- a/src/modules/vmount/output_mavlink.cpp
++++ b/src/modules/vmount/output_mavlink.cpp
+@@ -83,10 +83,10 @@ int OutputMavlink::update(const ControlData *control_data)
+ 		}
+ 
+ 		if (_vehicle_command_pub) {
+-			orb_publish(ORB_ID(vehicle_command), _vehicle_command_pub, &vehicle_command);
++			orb_publish(ORB_ID(vehicle_command_gimbal), _vehicle_command_pub, &vehicle_command);
+ 
+ 		} else {
+-			_vehicle_command_pub = orb_advertise_queue(ORB_ID(vehicle_command), &vehicle_command,
++			_vehicle_command_pub = orb_advertise_queue(ORB_ID(vehicle_command_gimbal), &vehicle_command,
+ 					       vehicle_command_s::ORB_QUEUE_LENGTH);
+ 		}
+ 
+@@ -121,7 +121,7 @@ int OutputMavlink::update(const ControlData *control_data)
+ 		break;
+ 	}
+ 
+-	orb_publish(ORB_ID(vehicle_command), _vehicle_command_pub, &vehicle_command);
++	orb_publish(ORB_ID(vehicle_command_gimbal), _vehicle_command_pub, &vehicle_command);
+ 
+ 	_last_update = t;
+ 
+-- 
+2.17.1
+
