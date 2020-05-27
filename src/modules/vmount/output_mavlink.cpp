@@ -83,10 +83,10 @@ int OutputMavlink::update(const ControlData *control_data)
 		}
 
 		if (_vehicle_command_pub) {
-			orb_publish(ORB_ID(vehicle_command), _vehicle_command_pub, &vehicle_command);
+			orb_publish(ORB_ID(vehicle_command_gimbal), _vehicle_command_pub, &vehicle_command);
 
 		} else {
-			_vehicle_command_pub = orb_advertise_queue(ORB_ID(vehicle_command), &vehicle_command,
+			_vehicle_command_pub = orb_advertise_queue(ORB_ID(vehicle_command_gimbal), &vehicle_command,
 					       vehicle_command_s::ORB_QUEUE_LENGTH);
 		}
 
@@ -121,7 +121,7 @@ int OutputMavlink::update(const ControlData *control_data)
 		break;
 	}
 
-	orb_publish(ORB_ID(vehicle_command), _vehicle_command_pub, &vehicle_command);
+	orb_publish(ORB_ID(vehicle_command_gimbal), _vehicle_command_pub, &vehicle_command);
 
 	_last_update = t;
 

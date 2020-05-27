@@ -472,6 +472,7 @@ public:
 
 private:
 	MavlinkOrbSubscription *_cmd_sub;
+	MavlinkOrbSubscription *_cmd_gimbal_sub;
 
 	/* do not allow top copying this class */
 	MavlinkStreamCommandLong(MavlinkStreamCommandLong &) = delete;
@@ -479,7 +480,8 @@ private:
 
 protected:
 	explicit MavlinkStreamCommandLong(Mavlink *mavlink) : MavlinkStream(mavlink),
-		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command), 0, true))
+		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command), 0, true)),
+		_cmd_gimbal_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command_gimbal), 0, true))
 	{}
 
 	bool send(const hrt_abstime t)
@@ -488,6 +490,19 @@ protected:
 		bool sent = false;
 
 		if (_cmd_sub->update_if_changed(&cmd)) {
+
+			if (!cmd.from_external) {
+				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
+
+				MavlinkCommandSender::instance().handle_vehicle_command(cmd, _mavlink->get_channel());
+				sent = true;
+
+			} else {
+				PX4_DEBUG("not forwarding command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
+			}
+		}
+
+		if (_cmd_gimbal_sub->update_if_changed(&cmd)) {
 
 			if (!cmd.from_external) {
 				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
