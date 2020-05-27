@@ -490,6 +490,7 @@ public:
 
 private:
 	uORB::Subscription _cmd_sub{ORB_ID(vehicle_command)};
+	uORB::Subscription _cmd_gimbal_sub{ORB_ID(vehicle_command_gimbal)};
 
 	/* do not allow top copying this class */
 	MavlinkStreamCommandLong(MavlinkStreamCommandLong &) = delete;
@@ -505,6 +506,19 @@ protected:
 		bool sent = false;
 
 		if (_cmd_sub.update(&cmd)) {
+
+			if (!cmd.from_external) {
+				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
+
+				MavlinkCommandSender::instance().handle_vehicle_command(cmd, _mavlink->get_channel());
+				sent = true;
+
+			} else {
+				PX4_DEBUG("not forwarding command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
+			}
+		}
+
+		if (_cmd_gimbal_sub->update_if_changed(&cmd)) {
 
 			if (!cmd.from_external) {
 				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
