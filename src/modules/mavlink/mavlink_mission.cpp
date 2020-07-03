@@ -663,7 +663,7 @@ MavlinkMissionManager::handle_mission_set_current(const mavlink_message_t *msg)
 	mavlink_msg_mission_set_current_decode(msg, &wpc);
 
 	if (CHECK_SYSID_COMPID_MISSION(wpc)) {
-		if (_state == MAVLINK_WPM_STATE_IDLE) {
+		if (_state == MAVLINK_WPM_STATE_IDLE || _state == MAVLINK_WPM_STATE_SENDLIST) {
 			_time_last_recv = hrt_absolute_time();
 
 			if (wpc.seq < _count[MAV_MISSION_TYPE_MISSION]) {
