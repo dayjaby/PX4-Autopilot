@@ -518,7 +518,7 @@ protected:
 			}
 		}
 
-		if (_cmd_gimbal_sub->update_if_changed(&cmd)) {
+		if (_cmd_gimbal_sub.update(&cmd)) {
 
 			if (!cmd.from_external) {
 				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);

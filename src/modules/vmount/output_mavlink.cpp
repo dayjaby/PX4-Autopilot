@@ -78,18 +78,9 @@ int OutputMavlink::update(const ControlData *control_data)
 		} else {
 			vehicle_command.param1 = vehicle_command_s::VEHICLE_MOUNT_MODE_MAVLINK_TARGETING;
 
-<<<<<<< HEAD
 			vehicle_command.param5 = static_cast<double>(control_data->type_data.angle.frames[0]);
 			vehicle_command.param6 = static_cast<double>(control_data->type_data.angle.frames[1]);
 			vehicle_command.param7 = static_cast<float>(control_data->type_data.angle.frames[2]);
-=======
-		if (_vehicle_command_pub) {
-			orb_publish(ORB_ID(vehicle_command_gimbal), _vehicle_command_pub, &vehicle_command);
-
-		} else {
-			_vehicle_command_pub = orb_advertise_queue(ORB_ID(vehicle_command_gimbal), &vehicle_command,
-					       vehicle_command_s::ORB_QUEUE_LENGTH);
->>>>>>> 9032de6bfb... added vehicle_command_gimbal topic
 		}
 
 		vehicle_command.param2 = control_data->stabilize_axis[0];
@@ -114,19 +105,9 @@ int OutputMavlink::update(const ControlData *control_data)
 	vehicle_command.param3 = (_angle_outputs[2] + _config.yaw_offset) * M_RAD_TO_DEG_F;
 	vehicle_command.param7 = 2.0f; // MAV_MOUNT_MODE_MAVLINK_TARGETING;
 
-	switch (_config.custom_gimbal) {
-	case 0: // default
-		vehicle_command.param1 = math::degrees(_angle_outputs[1] + _config.pitch_offset);
-		vehicle_command.param2 = math::degrees(_angle_outputs[0] + _config.roll_offset);
-		vehicle_command.param3 = math::degrees(_angle_outputs[2] + _config.yaw_offset);
-		break;
-
-	case 1: // Gremsy Pixy F - need to multiply the degrees by 100
-		vehicle_command.param1 = math::degrees(_angle_outputs[1] + _config.pitch_offset) * -100;
-		vehicle_command.param2 = math::degrees(_angle_outputs[0] + _config.roll_offset) * 100;
-		vehicle_command.param3 = math::degrees(_angle_outputs[2] + _config.yaw_offset) * 100;
-		break;
-	}
+	vehicle_command.param1 = math::degrees(_angle_outputs[1] + _config.pitch_offset) * -100;
+	vehicle_command.param2 = math::degrees(_angle_outputs[0] + _config.roll_offset) * 100;
+	vehicle_command.param3 = math::degrees(_angle_outputs[2] + _config.yaw_offset) * 100;
 
 	_vehicle_command_pub.publish(vehicle_command);
 
