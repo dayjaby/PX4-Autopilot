@@ -94,7 +94,7 @@ void mavlink_send_uart_bytes(mavlink_channel_t chan, const uint8_t *ch, int leng
 #ifdef MAVLINK_PRINT_PACKETS
 
 		for (unsigned i = 0; i < length; i++) {
-			printf("%02x", (unsigned char)ch[i]);
+			PX4_INFO_RAW("%02x", (unsigned char)ch[i]);
 		}
 
 #endif
@@ -108,7 +108,7 @@ void mavlink_start_uart_send(mavlink_channel_t chan, int length)
 	if (m != nullptr) {
 		m->send_start(length);
 #ifdef MAVLINK_PRINT_PACKETS
-		printf("START PACKET (%u): ", (unsigned)chan);
+		PX4_INFO_RAW("START PACKET (%u): ", (unsigned)chan);
 #endif
 	}
 }
@@ -120,7 +120,7 @@ void mavlink_end_uart_send(mavlink_channel_t chan, int length)
 	if (m != nullptr) {
 		m->send_finish();
 #ifdef MAVLINK_PRINT_PACKETS
-		printf("\n");
+		PX4_INFO_RAW("\n");
 #endif
 	}
 }
@@ -374,7 +374,7 @@ Mavlink::destroy_all_instances()
 		inst_to_del->_task_should_exit = true;
 
 		while (inst_to_del->_task_running) {
-			printf(".");
+			PX4_INFO_RAW(".");
 			fflush(stdout);
 			px4_usleep(10000);
 			iterations++;
@@ -394,7 +394,7 @@ Mavlink::destroy_all_instances()
 		delete inst_to_del;
 	}
 
-	printf("\n");
+	PX4_INFO_RAW("\n");
 	PX4_INFO("all instances stopped");
 	return OK;
 }
@@ -408,7 +408,7 @@ Mavlink::get_status_all_instances(bool show_streams_status)
 
 	while (inst != nullptr) {
 
-		printf("\ninstance #%u:\n", iterations);
+		PX4_INFO_RAW("\ninstance #%u:\n", iterations);
 
 		if (show_streams_status) {
 			inst->display_status_streams();
@@ -1646,6 +1646,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("SYSTEM_TIME", 1.0f);
 		configure_stream_local("TRAJECTORY_REPRESENTATION_WAYPOINTS", 5.0f);
 		configure_stream_local("UTM_GLOBAL_POSITION", 1.0f);
+		configure_stream_local("VEHICLE_ROI", 1.0f);
 		configure_stream_local("VFR_HUD", 10.0f);
 		configure_stream_local("VIBRATION", 0.5f);
 		configure_stream_local("WIND_COV", 10.0f);
@@ -2727,66 +2728,66 @@ void
 Mavlink::display_status()
 {
 	if (_tstatus.heartbeat_time > 0) {
-		printf("\tGCS heartbeat:\t%llu us ago\n", (unsigned long long)hrt_elapsed_time(&_tstatus.heartbeat_time));
+		PX4_INFO_RAW("\tGCS heartbeat:\t%llu us ago\n", (unsigned long long)hrt_elapsed_time(&_tstatus.heartbeat_time));
 	}
 
-	printf("\tmavlink chan: #%u\n", _channel);
+	PX4_INFO_RAW("\tmavlink chan: #%u\n", _channel);
 
 	if (_tstatus.timestamp > 0) {
 
-		printf("\ttype:\t\t");
+		PX4_INFO_RAW("\ttype:\t\t");
 
 		if (_radio_status_available) {
-			printf("RADIO Link\n");
-			printf("\t  rssi:\t\t%d\n", _rstatus.rssi);
-			printf("\t  remote rssi:\t%u\n", _rstatus.remote_rssi);
-			printf("\t  txbuf:\t%u\n", _rstatus.txbuf);
-			printf("\t  noise:\t%d\n", _rstatus.noise);
-			printf("\t  remote noise:\t%u\n", _rstatus.remote_noise);
-			printf("\t  rx errors:\t%u\n", _rstatus.rxerrors);
-			printf("\t  fixed:\t%u\n", _rstatus.fix);
+			PX4_INFO_RAW("RADIO Link\n");
+			PX4_INFO_RAW("\t  rssi:\t\t%d\n", _rstatus.rssi);
+			PX4_INFO_RAW("\t  remote rssi:\t%u\n", _rstatus.remote_rssi);
+			PX4_INFO_RAW("\t  txbuf:\t%u\n", _rstatus.txbuf);
+			PX4_INFO_RAW("\t  noise:\t%d\n", _rstatus.noise);
+			PX4_INFO_RAW("\t  remote noise:\t%u\n", _rstatus.remote_noise);
+			PX4_INFO_RAW("\t  rx errors:\t%u\n", _rstatus.rxerrors);
+			PX4_INFO_RAW("\t  fixed:\t%u\n", _rstatus.fix);
 
 		} else if (_is_usb_uart) {
-			printf("USB CDC\n");
+			PX4_INFO_RAW("USB CDC\n");
 
 		} else {
-			printf("GENERIC LINK OR RADIO\n");
+			PX4_INFO_RAW("GENERIC LINK OR RADIO\n");
 		}
 
 	} else {
-		printf("\tno radio status.\n");
+		PX4_INFO_RAW("\tno radio status.\n");
 	}
 
-	printf("\tflow control: %s\n", _flow_control_mode ? "ON" : "OFF");
-	printf("\trates:\n");
-	printf("\t  tx: %.3f kB/s\n", (double)_tstatus.rate_tx);
-	printf("\t  txerr: %.3f kB/s\n", (double)_tstatus.rate_txerr);
-	printf("\t  tx rate mult: %.3f\n", (double)_rate_mult);
-	printf("\t  tx rate max: %i B/s\n", _datarate);
-	printf("\t  rx: %.3f kB/s\n", (double)_tstatus.rate_rx);
+	PX4_INFO_RAW("\tflow control: %s\n", _flow_control_mode ? "ON" : "OFF");
+	PX4_INFO_RAW("\trates:\n");
+	PX4_INFO_RAW("\t  tx: %.3f kB/s\n", (double)_tstatus.rate_tx);
+	PX4_INFO_RAW("\t  txerr: %.3f kB/s\n", (double)_tstatus.rate_txerr);
+	PX4_INFO_RAW("\t  tx rate mult: %.3f\n", (double)_rate_mult);
+	PX4_INFO_RAW("\t  tx rate max: %i B/s\n", _datarate);
+	PX4_INFO_RAW("\t  rx: %.3f kB/s\n", (double)_tstatus.rate_rx);
 
 	if (_mavlink_ulog) {
-		printf("\tULog rate: %.1f%% of max %.1f%%\n", (double)_mavlink_ulog->current_data_rate() * 100.,
+		PX4_INFO_RAW("\tULog rate: %.1f%% of max %.1f%%\n", (double)_mavlink_ulog->current_data_rate() * 100.,
 		       (double)_mavlink_ulog->maximum_data_rate() * 100.);
 	}
 
-	printf("\tFTP enabled: %s, TX enabled: %s\n",
+	PX4_INFO_RAW("\tFTP enabled: %s, TX enabled: %s\n",
 	       _ftp_on ? "YES" : "NO",
 	       _transmitting_enabled ? "YES" : "NO");
-	printf("\tmode: %s\n", mavlink_mode_str(_mode));
-	printf("\tMAVLink version: %i\n", _protocol_version);
+	PX4_INFO_RAW("\tmode: %s\n", mavlink_mode_str(_mode));
+	PX4_INFO_RAW("\tMAVLink version: %i\n", _protocol_version);
 
-	printf("\ttransport protocol: ");
+	PX4_INFO_RAW("\ttransport protocol: ");
 
 	switch (_protocol) {
 #if defined(MAVLINK_UDP)
 
 	case Protocol::UDP:
-		printf("UDP (%i, remote port: %i)\n", _network_port, _remote_port);
+		PX4_INFO_RAW("UDP (%i, remote port: %i)\n", _network_port, _remote_port);
 #ifdef __PX4_POSIX
 
 		if (get_client_source_initialized()) {
-			printf("\tpartner IP: %s\n", inet_ntoa(get_client_source_address().sin_addr));
+			PX4_INFO_RAW("\tpartner IP: %s\n", inet_ntoa(get_client_source_address().sin_addr));
 		}
 
 #endif
@@ -2794,24 +2795,24 @@ Mavlink::display_status()
 #endif // MAVLINK_UDP
 
 	case Protocol::SERIAL:
-		printf("serial (%s @%i)\n", _device_name, _baudrate);
+		PX4_INFO_RAW("serial (%s @%i)\n", _device_name, _baudrate);
 		break;
 	}
 
 	if (_ping_stats.last_ping_time > 0) {
-		printf("\tping statistics:\n");
-		printf("\t  last: %0.2f ms\n", (double)_ping_stats.last_rtt);
-		printf("\t  mean: %0.2f ms\n", (double)_ping_stats.mean_rtt);
-		printf("\t  max: %0.2f ms\n", (double)_ping_stats.max_rtt);
-		printf("\t  min: %0.2f ms\n", (double)_ping_stats.min_rtt);
-		printf("\t  dropped packets: %u\n", _ping_stats.dropped_packets);
+		PX4_INFO_RAW("\tping statistics:\n");
+		PX4_INFO_RAW("\t  last: %0.2f ms\n", (double)_ping_stats.last_rtt);
+		PX4_INFO_RAW("\t  mean: %0.2f ms\n", (double)_ping_stats.mean_rtt);
+		PX4_INFO_RAW("\t  max: %0.2f ms\n", (double)_ping_stats.max_rtt);
+		PX4_INFO_RAW("\t  min: %0.2f ms\n", (double)_ping_stats.min_rtt);
+		PX4_INFO_RAW("\t  dropped packets: %u\n", _ping_stats.dropped_packets);
 	}
 }
 
 void
 Mavlink::display_status_streams()
 {
-	printf("\t%-20s%-16s %s\n", "Name", "Rate Config (current) [Hz]", "Message Size (if active) [B]");
+	PX4_INFO_RAW("\t%-20s%-16s %s\n", "Name", "Rate Config (current) [Hz]", "Message Size (if active) [B]");
 
 	const float rate_mult = _rate_mult;
 
@@ -2831,13 +2832,13 @@ Mavlink::display_status_streams()
 			snprintf(rate_str, sizeof(rate_str), "%6.2f (%.3f)", (double)rate, (double)rate_current);
 		}
 
-		printf("\t%-30s%-16s", stream->get_name(), rate_str);
+		PX4_INFO_RAW("\t%-30s%-16s", stream->get_name(), rate_str);
 
 		if (size > 0) {
-			printf(" %3i\n", size);
+			PX4_INFO_RAW(" %3i\n", size);
 
 		} else {
-			printf("\n");
+			PX4_INFO_RAW("\n");
 		}
 	}
 }
