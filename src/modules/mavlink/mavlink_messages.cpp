@@ -49,6 +49,7 @@
 #include "streams/flight_information.h"
 #include "streams/protocol_version.h"
 #include "streams/storage_information.h"
+#include "streams/vehicle_roi.h"
 
 #include <commander/px4_custom_mode.h>
 #include <drivers/drv_pwm_output.h>
@@ -5255,7 +5256,8 @@ static const StreamListItem streams_list[] = {
 	create_stream_list_item<MavlinkStreamAutopilotVersion>(),
 	create_stream_list_item<MavlinkStreamProtocolVersion>(),
 	create_stream_list_item<MavlinkStreamFlightInformation>(),
-	create_stream_list_item<MavlinkStreamStorageInformation>()
+	create_stream_list_item<MavlinkStreamStorageInformation>(),
+	create_stream_list_item<MavlinkStreamVehicleROI>()
 };
 
 const char *get_stream_name(const uint16_t msg_id)
