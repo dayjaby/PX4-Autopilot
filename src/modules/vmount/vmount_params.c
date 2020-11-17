@@ -234,8 +234,9 @@ PARAM_DEFINE_FLOAT(MNT_OFF_YAW, 0.0f);
 *
 * @value 0 DEFAULT
 * @value 1 GREMSY_PIXY_F
+* @value 2 GREMSY_PIXY_F_NEW
 * @min 0
-* @max 1
+* @max 2
 * @group Mount
 */
 PARAM_DEFINE_INT32(MNT_OUT_CUSTOM, 0);
