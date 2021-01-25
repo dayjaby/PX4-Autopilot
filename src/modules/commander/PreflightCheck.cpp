@@ -74,7 +74,7 @@ static bool check_calibration(const char *param_template, int32_t device_id)
 
 	/* old style transition: check param values */
 	while (!calibration_found) {
-		sprintf(s, param_template, instance);
+		snprintf(s, sizeof(s)/sizeof(s[0]), param_template, instance);
 		const param_t parm = param_find_no_notification(s);
 
 		/* if the calibration param is not present, abort */
