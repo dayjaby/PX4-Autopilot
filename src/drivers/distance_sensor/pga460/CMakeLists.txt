@@ -30,6 +30,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
+add_compile_options(
+-Wstrict-overflow=0
+)
+
 px4_add_module(
 	MODULE drivers__pga460
 	MAIN pga460
