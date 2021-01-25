@@ -46,6 +46,7 @@
  * @value 5 Yaw 225°
  * @value 6 Yaw 270°
  * @value 7 Yaw 315°
+ * @value 8 Disabled
  *
  * @reboot_required true
  *
