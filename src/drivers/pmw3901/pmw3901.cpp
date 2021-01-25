@@ -566,7 +566,7 @@ int
 PMW3901::collect()
 {
 	int ret = OK;
-	int16_t delta_x_raw, delta_y_raw;
+	int16_t delta_x_raw = 0, delta_y_raw = 0;
 	float delta_x, delta_y;
 
 	perf_begin(_sample_perf);

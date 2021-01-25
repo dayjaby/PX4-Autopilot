@@ -1080,8 +1080,8 @@ int IST8310::check_offset()
 int
 IST8310::set_selftest(unsigned enable)
 {
-	int ret;
-	uint8_t str;
+	int ret = 0;
+	uint8_t str = 0;
 	/* arm the excitement strap */
 	ret = read_reg(ADDR_STR, str);
 
