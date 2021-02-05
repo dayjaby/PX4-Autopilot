@@ -159,6 +159,12 @@ int Simulator::start(int argc, char *argv[])
 			_instance->set_port(atoi(argv[4]));
 		}
 
+		if (argc == 6 && strcmp(argv[3], "-t") == 0) {
+			_instance->set_ip(InternetProtocol::TCP);
+			_instance->set_tcp_remote_ipaddr(argv[4]);
+			_instance->set_port(atoi(argv[5]));
+		}
+
 		if (argv[2][1] == 's') {
 			_instance->initialize_sensor_data();
 #ifndef __PX4_QURT

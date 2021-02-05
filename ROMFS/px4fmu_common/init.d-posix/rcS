@@ -199,7 +199,8 @@ sh "$autostart_file"
 
 dataman start
 replay tryapplyparams
-simulator start -s -c $simulator_tcp_port
+# simulator start -s -c $simulator_tcp_port
+simulator start -s -t 192.168.178.20 $simulator_tcp_port
 tone_alarm start
 gyrosim start
 accelsim start

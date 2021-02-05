@@ -237,6 +237,7 @@ public:
 
 	void set_ip(InternetProtocol ip);
 	void set_port(unsigned port);
+	void set_tcp_remote_ipaddr(char *tcp_remote_ipaddr) { _tcp_remote_ipaddr = tcp_remote_ipaddr; }
 
 private:
 	Simulator() :
@@ -314,6 +315,8 @@ private:
 	unsigned int _port{14560};
 
 	InternetProtocol _ip{InternetProtocol::UDP};
+
+	char *_tcp_remote_ipaddr{nullptr};
 
 	bool _initialized{false};
 

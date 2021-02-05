@@ -72,6 +72,8 @@ using namespace DriverFramework;
 #define GPSSIM_DEVICE_PATH "/dev/gpssim"
 
 #define TIMEOUT_100MS 100000
+#define TIMEOUT_200MS 200000
+#define TIMEOUT_400MS 400000
 #define RATE_MEASUREMENT_PERIOD 5000000
 
 /* class for dynamic allocation of satellite info data */

@@ -45,6 +45,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <arpa/inet.h>
 #include <pthread.h>
 #include <conversion/rotation.h>
 #include <mathlib/mathlib.h>
@@ -695,8 +696,13 @@ void Simulator::poll_for_MAVLink_messages()
 
 	struct sockaddr_in _myaddr {};
 	_myaddr.sin_family = AF_INET;
-	_myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	_myaddr.sin_port = htons(_port);
+
+	if (_tcp_remote_ipaddr != nullptr) {
+		_myaddr.sin_addr.s_addr = inet_addr(_tcp_remote_ipaddr);
+	} else {
+		_myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	}
 
 	if (_ip == InternetProtocol::UDP) {
 
@@ -839,6 +845,7 @@ void Simulator::poll_for_MAVLink_messages()
 
 				for (int i = 0; i < len; i++) {
 					if (mavlink_parse_char(MAVLINK_COMM_0, _buf[i], &msg, &mavlink_status)) {
+						// PX4_INFO("Got mavlink message: %d", msg.msgid);
 						handle_message(&msg);
 					}
 				}
@@ -978,7 +985,6 @@ int Simulator::publish_sensor_topics(const mavlink_hil_sensor_t *imu)
 		PX4_DEBUG("All sensor fields in mavlink HIL_SENSOR packet not updated.  Got %08x", imu->fields_updated);
 	}
 
-	/*
 	  static int count=0;
 	  static uint64_t last_timestamp=0;
 	  count++;
@@ -991,7 +997,6 @@ int Simulator::publish_sensor_topics(const mavlink_hil_sensor_t *imu)
 		PX4_WARN("BARO : %f %f %f",imu->abs_pressure,imu->pressure_alt,imu->temperature);
 	}
 	last_timestamp = timestamp;
-	*/
 	/* gyro */
 	{
 		sensor_gyro_s gyro = {};
