@@ -107,6 +107,7 @@ then
 	param set CBRK_AIRSPD_CHK 0
 
 	param set COM_DISARM_LAND 0.1
+	param set COM_LOW_BAT_ACT 1
 	param set COM_OBL_ACT 2
 	param set COM_OBL_RC_ACT 0
 	param set COM_OF_LOSS_T 5
@@ -152,6 +153,7 @@ then
 	# enable default, estimator replay and vision/avoidance logging profiles
 	param set SDLOG_PROFILE 131
 	param set SDLOG_DIRS_MAX 7
+	param set SIM_BAT_DRAIN 1800
 	param set SENS_BOARD_ROT 0
 	param set SENS_BOARD_X_OFF 0.000001
 	param set SENS_DPRES_OFF 0.001
@@ -199,8 +201,11 @@ sh "$autostart_file"
 
 dataman start
 replay tryapplyparams
-# simulator start -s -c $simulator_tcp_port
-simulator start -s -t 192.168.178.20 $simulator_tcp_port
+if [ "$PX4_REMOTE_IP" = "" ]; then
+	simulator start -s -c $simulator_tcp_port
+else
+	simulator start -s -t $PX4_REMOTE_IP $simulator_tcp_port
+fi
 tone_alarm start
 gyrosim start
 accelsim start
