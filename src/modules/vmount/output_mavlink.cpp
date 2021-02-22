@@ -119,7 +119,15 @@ int OutputMavlink::update(const ControlData *control_data)
 		vehicle_command.param2 = math::degrees(_angle_outputs[0] + _config.roll_offset) * 100;
 		vehicle_command.param3 = math::degrees(_angle_outputs[2] + _config.yaw_offset) * 100;
 		break;
+
+	case 2: // newer version of Gremsy Pixy F, since 2020
+		vehicle_command.param1 = math::degrees(_angle_outputs[1] + _config.pitch_offset) * -1;
+		vehicle_command.param2 = math::degrees(_angle_outputs[0] + _config.roll_offset);
+		vehicle_command.param3 = math::degrees(_angle_outputs[2] + _config.yaw_offset) * -1;
+		break;
 	}
+
+	vehicle_command.param7 = vehicle_command_s::VEHICLE_MOUNT_MODE_MAVLINK_TARGETING;
 
 	orb_publish(ORB_ID(vehicle_command_gimbal), _vehicle_command_pub, &vehicle_command);
 

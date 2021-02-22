@@ -93,6 +93,7 @@ struct Parameters {
 	int32_t mnt_man_roll;
 	int32_t mnt_man_yaw;
 	int32_t mnt_do_stab;
+	int32_t mnt_flw_yaw;
 	float mnt_range_pitch;
 	float mnt_range_roll;
 	float mnt_range_yaw;
@@ -115,6 +116,7 @@ struct Parameters {
 		       mnt_man_roll != p.mnt_man_roll ||
 		       mnt_man_yaw != p.mnt_man_yaw ||
 		       mnt_do_stab != p.mnt_do_stab ||
+		       mnt_flw_yaw != p.mnt_flw_yaw ||
 		       mnt_range_pitch != p.mnt_range_pitch ||
 		       mnt_range_roll != p.mnt_range_roll ||
 		       mnt_range_yaw != p.mnt_range_yaw ||
@@ -138,6 +140,7 @@ struct ParameterHandles {
 	param_t mnt_man_roll;
 	param_t mnt_man_yaw;
 	param_t mnt_do_stab;
+	param_t mnt_flw_yaw;
 	param_t mnt_range_pitch;
 	param_t mnt_range_roll;
 	param_t mnt_range_yaw;
@@ -269,6 +272,7 @@ static int vmount_thread_main(int argc, char *argv[])
 			output_config.custom_gimbal = params.mnt_out_custom;
 			output_config.mavlink_sys_id = params.mnt_mav_sysid;
 			output_config.mavlink_comp_id = params.mnt_mav_compid;
+			output_config.follow_yaw = params.mnt_flw_yaw == 1;
 
 			bool alloc_failed = false;
 			thread_data.input_objs_len = 1;
@@ -558,6 +562,7 @@ void update_params(ParameterHandles &param_handles, Parameters &params, bool &go
 	param_get(param_handles.mnt_man_roll, &params.mnt_man_roll);
 	param_get(param_handles.mnt_man_yaw, &params.mnt_man_yaw);
 	param_get(param_handles.mnt_do_stab, &params.mnt_do_stab);
+	param_get(param_handles.mnt_flw_yaw, &params.mnt_flw_yaw);
 	param_get(param_handles.mnt_range_pitch, &params.mnt_range_pitch);
 	param_get(param_handles.mnt_range_roll, &params.mnt_range_roll);
 	param_get(param_handles.mnt_range_yaw, &params.mnt_range_yaw);
@@ -581,6 +586,7 @@ bool get_params(ParameterHandles &param_handles, Parameters &params)
 	param_handles.mnt_man_roll = param_find("MNT_MAN_ROLL");
 	param_handles.mnt_man_yaw = param_find("MNT_MAN_YAW");
 	param_handles.mnt_do_stab = param_find("MNT_DO_STAB");
+	param_handles.mnt_flw_yaw = param_find("MNT_FLW_YAW");
 	param_handles.mnt_range_pitch = param_find("MNT_RANGE_PITCH");
 	param_handles.mnt_range_roll = param_find("MNT_RANGE_ROLL");
 	param_handles.mnt_range_yaw = param_find("MNT_RANGE_YAW");
@@ -599,6 +605,7 @@ bool get_params(ParameterHandles &param_handles, Parameters &params)
 	    param_handles.mnt_man_roll == PARAM_INVALID ||
 	    param_handles.mnt_man_yaw == PARAM_INVALID ||
 	    param_handles.mnt_do_stab == PARAM_INVALID ||
+	    param_handles.mnt_flw_yaw == PARAM_INVALID ||
 	    param_handles.mnt_range_pitch == PARAM_INVALID ||
 	    param_handles.mnt_range_roll == PARAM_INVALID ||
 	    param_handles.mnt_range_yaw == PARAM_INVALID ||

@@ -67,6 +67,7 @@ struct OutputConfig {
 	uint32_t mavlink_sys_id;	/**< Mavlink target system id for mavlink output */
 	uint32_t mavlink_comp_id;
 	uint32_t custom_gimbal;   /**< Custom gimbal device */
+	bool follow_yaw;
 };
 
 

@@ -21,9 +21,6 @@ then
 fi
 
 # have those parameters for all HPA copters
-param set NAV_DLL_ACT 0
-param set NAV_RCL_ACT 0
-param set MPC_SPOOLUP_TIME 5
 param set MIS_DIST_1WP 0
 param set MIS_DIST_WPS 0
 param set SIM_BAT_MIN_PCT 10

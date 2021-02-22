@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+# @name Generic M4
+#
+# @type M4
+# @class Copter
+#
+# @output MAIN1 motor 1
+# @output MAIN2 motor 2
+# @output MAIN3 motor 3
+# @output MAIN4 motor 4
+# @output MAIN5 feed-through of RC AUX1 channel
+# @output MAIN6 feed-through of RC AUX2 channel
+#
+# @output AUX1 feed-through of RC AUX1 channel
+# @output AUX2 feed-through of RC AUX2 channel
+# @output AUX3 feed-through of RC AUX3 channel
+# @output AUX4 feed-through of RC FLAPS channel
+#
+# @maintainer David Jablonski <dayjaby@gmail.com>
+#
+
+sh /etc/init.d/rc.mc_defaults
+
+if [ $AUTOCNF = yes ]
+then
+	param set BAT_V_CHARGED 4.2
+	param set BAT_V_DIV 18
+	param set BAT_V_EMPTY 3.5
+	param set BAT_V_LOAD_DROP 0.2
+	param set BAT_CRIT_THR 0.1
+	param set BAT_EMERGEN 0.03
+	param set BAT_LOW_THR 0.2
+	param set COM_FLTMODE1 1
+	parma set COM_FLTMODE2 4
+	param set COM_FLTMODE3 2
+	param set COM_FLTMODE4 3
+	param set COM_HOME_H_T 7
+	param set COM_POS_FS_EPH 7
+	param set COM_LOW_BAT_ACT 3
+	param set COM_DISARM_LAND 1
+	
+	param set EKF2_BARO_DELAY 100
+	param set EKF2_BARO_NOISE 12
+	param set EKF2_GPS_POS_X 0.2
+
+	param set MAV_0_SECURE 0
+	param set MAV_1_CONFIG 102
+	param set MAV_1_SECURE 0
+
+	param set MC_PITCHRATE_I 0.2
+	param set MC_ROLLRATE_I 0.2
+	param set MC_ROLL_P 5.0
+
+	param set MIS_DIST_1WP 0
+	param set MIS_DIST_WPS 0
+
+	param set MNT_MODE_IN 0
+	param set MNT_MODE_OUT 1
+	param set MNT_RANGE_ROLL 240
+	param set MNT_RANGE_PITCH 270
+	param set MNT_RANGE_YAW 300
+
+	param set MPC_SPOOLUP_TIME 3
+	param set MPC_TKO_RAMP_T 1
+	param set MPC_TKO_SPEED 3
+	# questionable parameter:
+	param set MPC_TILTMAX_AIR 20
+	param set MPC_XY_P 1
+	param set MPC_Z_VEL_I 0.027
+	param set MPC_Z_VEL_MAX_DN 2
+	param set MPC_Z_VEL_MAX_UP 2
+	
+	param set RC_MAP_FLTMODE 6
+
+	param set RTL_RETURN_ALT 30
+
+	param set SER_TEL2_BAUD 115200
+fi
+
+mavlink stream -d /dev/ttyS2 -s ATTITUDE -r 0
+mavlink stream -d /dev/ttyS2 -s ATTITUDE_QUATERNION -r 10
+mavlink stream -d /dev/ttyS2 -s CAMERA_IMAGE_CAPTURED -r 0
+mavlink stream -d /dev/ttyS2 -s DISTANCE_SENSOR -r 0
+mavlink stream -d /dev/ttyS2 -s GLOBAL_POSITION_INT -r 20
+mavlink stream -d /dev/ttyS2 -s HIGHRES_IMU -r 20
+mavlink stream -d /dev/ttyS2 -s ODOMETRY -r 10
+mavlink stream -d /dev/ttyS2 -s OPTICAL_FLOW_RAD -r 0
+mavlink stream -d /dev/ttyS2 -s VFR_HUD -r 0
+
+set MIXER quad_x
+
+set PWM_OUT 1234

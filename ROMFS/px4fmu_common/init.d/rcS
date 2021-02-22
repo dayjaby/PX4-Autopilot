@@ -461,7 +461,10 @@ else
 	fi
 
 	# Check for flow sensor, launched as a background task to scan
-	px4flow start &
+	if ! param compare SENS_FLOW_ROT 8
+	then
+		px4flow start &
+	fi
 
 	#
 	# Optional board supplied extras: rc.board_extras

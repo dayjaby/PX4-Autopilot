@@ -663,7 +663,7 @@ MavlinkMissionManager::handle_mission_set_current(const mavlink_message_t *msg)
 	mavlink_msg_mission_set_current_decode(msg, &wpc);
 
 	if (CHECK_SYSID_COMPID_MISSION(wpc)) {
-		if (_state == MAVLINK_WPM_STATE_IDLE) {
+		if (_state == MAVLINK_WPM_STATE_IDLE || _state == MAVLINK_WPM_STATE_SENDLIST) {
 			_time_last_recv = hrt_absolute_time();
 
 			if (wpc.seq < _count[MAV_MISSION_TYPE_MISSION]) {
@@ -683,9 +683,13 @@ MavlinkMissionManager::handle_mission_set_current(const mavlink_message_t *msg)
 			}
 
 		} else {
-			PX4_DEBUG("WPM: MISSION_SET_CURRENT ERROR: busy");
+			PX4_DEBUG("WPM: MISSION_SET_CURRENT ERROR: busy %d", MAVLINK_WPM_STATE_IDLE);
 
-			_mavlink->send_statustext_critical("WPM: IGN WP CURR CMD: Busy");
+			if (_state == MAVLINK_WPM_STATE_SENDLIST) {
+				_mavlink->send_statustext_critical("WPM: IGN WP CURR CMD: Busy send");
+			} else if (_state == MAVLINK_WPM_STATE_GETLIST) {
+				_mavlink->send_statustext_critical("WPM: IGN WP CURR CMD: Busy get");
+			}
 		}
 	}
 }
