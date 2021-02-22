@@ -137,7 +137,7 @@ void OutputBase::_set_angle_setpoints(const ControlData *control_data)
 	case ControlData::Type::Angle:
 		for (int i = 0; i < 3; ++i) {
 			if (control_data->type_data.angle.is_speed[i]) {
-				_angle_speeds[i] = control_data->type_data.angle.angles[i];
+				_angle_speeds[i] = control_data->type_data.angle.angles[i] * 0.2618f; // 15 degrees/s
 
 			} else {
 				_angle_setpoints[i] = control_data->type_data.angle.angles[i];
@@ -212,17 +212,38 @@ void OutputBase::_calculate_output_angles(const hrt_abstime &t)
 		_angle_setpoints[i] += dt * _angle_speeds[i];
 	}
 
+	float yaw_max = 1.f / _config.yaw_scale;
+	if (_angle_setpoints[2] > yaw_max) {
+		_angle_setpoints[2] = yaw_max;
+	}
+	float yaw_min = -1.f / _config.yaw_scale;
+	if (_angle_setpoints[2] < yaw_min) {
+		_angle_setpoints[2] = yaw_min;
+	}
+	float pitch_max = 1.f / _config.pitch_scale;
+	if (_angle_setpoints[1] > pitch_max) {
+		_angle_setpoints[1] = pitch_max;
+	}
+	float pitch_min = -1.f / _config.pitch_scale;
+	if (_angle_setpoints[1] < pitch_min) {
+		_angle_setpoints[1] = pitch_min;
+	}
+
 	//get the output angles and stabilize if necessary
 	vehicle_attitude_s vehicle_attitude;
 	matrix::Eulerf euler;
 
-	if (_stabilize[0] || _stabilize[1] || _stabilize[2]) {
+	if (_stabilize[0] || _stabilize[1] || _stabilize[2] || _config.follow_yaw) {
 		orb_copy(ORB_ID(vehicle_attitude), _vehicle_attitude_sub, &vehicle_attitude);
 		euler = matrix::Quatf(vehicle_attitude.q);
 	}
 
 	for (int i = 0; i < 3; ++i) {
-		if (_stabilize[i]) {
+		if(_config.follow_yaw && i==2) {
+			_angle_outputs[i] = _angle_setpoints[i] + euler(i);
+			continue; // skip the pi wrapping
+
+		} else if (_stabilize[i]) {
 			_angle_outputs[i] = _angle_setpoints[i] - euler(i);
 
 		} else {
@@ -234,6 +255,7 @@ void OutputBase::_calculate_output_angles(const hrt_abstime &t)
 
 		while (_angle_outputs[i] < -M_PI_F) { _angle_outputs[i] += 2.f * M_PI_F; }
 	}
+	// PX4_INFO("Mount yaw: %.2f", (double)_angle_outputs[2]);
 }
 
 } /* namespace vmount */

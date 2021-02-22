@@ -49,8 +49,8 @@ namespace vmount
 {
 
 
-InputRC::InputRC(bool do_stabilization, int aux_channel_roll, int aux_channel_pitch, int aux_channel_yaw)
-	: _do_stabilization(do_stabilization)
+InputRC::InputRC(bool do_stabilization, int aux_channel_roll, int aux_channel_pitch, int aux_channel_yaw) :
+	_do_stabilization(do_stabilization)
 {
 	_aux_channels[0] = aux_channel_roll;
 	_aux_channels[1] = aux_channel_pitch;
@@ -126,18 +126,34 @@ bool InputRC::_read_control_data_from_subscription(ControlData &control_data, bo
 			major_movement = true;
 		}
 	}
+	
+	_vehicle_status_sub.update();
+	const vehicle_status_s &vehicle_status = _vehicle_status_sub.get();
 
 	if (already_active || major_movement || _first_time) {
 
 		_first_time = false;
 
-		for (int i = 0; i < 3; ++i) {
-			control_data.type_data.angle.is_speed[i] = false;
-			control_data.type_data.angle.angles[i] = new_aux_values[i] * M_PI_F;
-			control_data.stabilize_axis[i] = _do_stabilization;
+		if (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER 
+			|| vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_STANDBY) {
+			for (int i = 0; i < 3; ++i) {
+				control_data.type_data.angle.is_speed[i] = true;
+				control_data.type_data.angle.angles[i] = new_aux_values[i] * M_PI_F;
+				control_data.stabilize_axis[i] = _do_stabilization;
 
-			_last_set_aux_values[i] = new_aux_values[i];
+				_last_set_aux_values[i] = new_aux_values[i];
+			}
+		} else {
+			for (int i = 0; i < 3; ++i) {
+				control_data.type_data.angle.is_speed[i] = true;
+				control_data.type_data.angle.angles[i] = 0.f;
+				control_data.stabilize_axis[i] = _do_stabilization;
+
+				_last_set_aux_values[i] = new_aux_values[i];
+			}
 		}
+		return true;
+
 
 		control_data.gimbal_shutter_retract = false;
 		return true;

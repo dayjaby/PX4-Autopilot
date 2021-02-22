@@ -40,7 +40,11 @@
 #pragma once
 
 #include "input.h"
+#include <uORB/Subscription.hpp>
 #include <uORB/topics/manual_control_setpoint.h>
+#include <uORB/topics/vehicle_status.h>
+
+using uORB::Subscription;
 
 namespace vmount
 {
@@ -84,6 +88,7 @@ private:
 	const bool _do_stabilization;
 	int _aux_channels[3];
 	int _manual_control_setpoint_sub = -1;
+	Subscription<vehicle_status_s>		_vehicle_status_sub{ORB_ID(vehicle_status)};
 
 	bool _first_time = true;
 	float _last_set_aux_values[3] = {};

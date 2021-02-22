@@ -170,6 +170,14 @@ PARAM_DEFINE_INT32(MNT_MAN_YAW, 0);
 PARAM_DEFINE_INT32(MNT_DO_STAB, 0);
 
 /**
+* Follow yaw
+*
+* @boolean
+* @group Mount
+*/
+PARAM_DEFINE_INT32(MNT_FLW_YAW, 0);
+
+/**
 * Range of pitch channel output in degrees (only in AUX output mode).
 *
 * @min 1.0

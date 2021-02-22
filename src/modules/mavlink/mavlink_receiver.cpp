@@ -2669,7 +2669,6 @@ MavlinkReceiver::receive_thread(void *arg)
 									is_allowed |= (command == cmd_id->value);
 								}
 								if (!is_allowed) {
-									/* we did not allow receiving this command id from this instance, so we discard it */
 									continue;
 								}
 							} else {
@@ -2678,12 +2677,10 @@ MavlinkReceiver::receive_thread(void *arg)
 									is_allowed |= (msg.msgid == msg_id->value);
 								}
 								if (!is_allowed) {
-									/* we did not allow receiving this message id from this instance, so we discard it */
 									continue;
 								}
 							}
 						}
-
 
 						/* handle generic messages and commands */
 						handle_message(&msg);
