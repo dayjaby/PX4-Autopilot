@@ -43,6 +43,7 @@ then
 	param set EKF2_BARO_DELAY 100
 	param set EKF2_BARO_NOISE 12
 	param set EKF2_GPS_POS_X 0.2
+	param set EKF2_REQ_EPH 7
 
 	param set MAV_0_SECURE 0
 	param set MAV_1_CONFIG 102
