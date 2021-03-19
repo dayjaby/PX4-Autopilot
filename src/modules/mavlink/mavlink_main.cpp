@@ -1684,6 +1684,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		// configure_stream_local("CAMERA_IMAGE_CAPTURED", unlimited_rate);
 		configure_stream_local("CAMERA_TRIGGER", unlimited_rate);
 		configure_stream_local("COLLISION", unlimited_rate);
+		configure_stream_local("COMMAND_LONG_GIMBAL", 1.0f);
 		configure_stream_local("DEBUG", 10.0f);
 		configure_stream_local("DEBUG_FLOAT_ARRAY", 10.0f);
 		configure_stream_local("DEBUG_VECT", 10.0f);
@@ -1757,6 +1758,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 
 	case MAVLINK_MODE_MAGIC:
 		configure_stream_local("ATTITUDE", 50.0f);
+		configure_stream_local("COMMAND_LONG_GIMBAL", 20.0f);
 
 	/* fallthrough */
 	case MAVLINK_MODE_CUSTOM:

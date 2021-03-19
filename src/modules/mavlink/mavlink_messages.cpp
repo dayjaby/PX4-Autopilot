@@ -472,7 +472,6 @@ public:
 
 private:
 	MavlinkOrbSubscription *_cmd_sub;
-	MavlinkOrbSubscription *_cmd_gimbal_sub;
 
 	/* do not allow top copying this class */
 	MavlinkStreamCommandLong(MavlinkStreamCommandLong &) = delete;
@@ -480,8 +479,7 @@ private:
 
 protected:
 	explicit MavlinkStreamCommandLong(Mavlink *mavlink) : MavlinkStream(mavlink),
-		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command), 0, true)),
-		_cmd_gimbal_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command_gimbal), 0, true))
+		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command), 0, true))
 	{}
 
 	bool send(const hrt_abstime t)
@@ -502,7 +500,63 @@ protected:
 			}
 		}
 
-		if (_cmd_gimbal_sub->update_if_changed(&cmd)) {
+		MavlinkCommandSender::instance().check_timeout(_mavlink->get_channel());
+
+		return sent;
+	}
+};
+
+class MavlinkStreamCommandLongGimbal : public MavlinkStream
+{
+public:
+	const char *get_name() const
+	{
+		return MavlinkStreamCommandLongGimbal::get_name_static();
+	}
+
+	static const char *get_name_static()
+	{
+		return "COMMAND_LONG_GIMBAL";
+	}
+
+	static uint16_t get_id_static()
+	{
+		return MAVLINK_MSG_ID_COMMAND_LONG;
+	}
+
+	uint16_t get_id()
+	{
+		return get_id_static();
+	}
+
+	static MavlinkStream *new_instance(Mavlink *mavlink)
+	{
+		return new MavlinkStreamCommandLongGimbal(mavlink);
+	}
+
+	unsigned get_size()
+	{
+		return 0;	// commands stream is not regular and not predictable
+	}
+
+private:
+	MavlinkOrbSubscription *_cmd_sub;
+
+	/* do not allow top copying this class */
+	MavlinkStreamCommandLongGimbal(MavlinkStreamCommandLongGimbal &) = delete;
+	MavlinkStreamCommandLongGimbal &operator = (const MavlinkStreamCommandLongGimbal &) = delete;
+
+protected:
+	explicit MavlinkStreamCommandLongGimbal(Mavlink *mavlink) : MavlinkStream(mavlink),
+		_cmd_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_command_gimbal), 0, true))
+	{}
+
+	bool send(const hrt_abstime t)
+	{
+		struct vehicle_command_s cmd;
+		bool sent = false;
+
+		if (_cmd_sub->update_if_changed(&cmd)) {
 
 			if (!cmd.from_external) {
 				PX4_DEBUG("sending command %d to %d/%d", cmd.command, cmd.target_system, cmd.target_component);
@@ -5011,6 +5065,7 @@ static const StreamListItem streams_list[] = {
 	StreamListItem(&MavlinkStreamHeartbeat::new_instance, &MavlinkStreamHeartbeat::get_name_static, &MavlinkStreamHeartbeat::get_id_static),
 	StreamListItem(&MavlinkStreamStatustext::new_instance, &MavlinkStreamStatustext::get_name_static, &MavlinkStreamStatustext::get_id_static),
 	StreamListItem(&MavlinkStreamCommandLong::new_instance, &MavlinkStreamCommandLong::get_name_static, &MavlinkStreamCommandLong::get_id_static),
+	StreamListItem(&MavlinkStreamCommandLongGimbal::new_instance, &MavlinkStreamCommandLongGimbal::get_name_static, &MavlinkStreamCommandLongGimbal::get_id_static),
 	StreamListItem(&MavlinkStreamSysStatus::new_instance, &MavlinkStreamSysStatus::get_name_static, &MavlinkStreamSysStatus::get_id_static),
 	StreamListItem(&MavlinkStreamHighresIMU::new_instance, &MavlinkStreamHighresIMU::get_name_static, &MavlinkStreamHighresIMU::get_id_static),
 	StreamListItem(&MavlinkStreamScaledPressure<0>::new_instance, &MavlinkStreamScaledPressure<0>::get_name_static, &MavlinkStreamScaledPressure<0>::get_id_static),
