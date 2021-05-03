@@ -1757,7 +1757,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		break;
 
 	case MAVLINK_MODE_MAGIC:
-		configure_stream_local("ATTITUDE", 50.0f);
+		configure_stream_local("ATTITUDE", 20.0f);
 		configure_stream_local("COMMAND_LONG_GIMBAL", 20.0f);
 
 	/* fallthrough */
