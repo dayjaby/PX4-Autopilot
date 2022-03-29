@@ -490,7 +490,10 @@ void MulticopterPositionControl::Run()
 				// reset constraints
 				_vehicle_constraints = {0, NAN, NAN, false, {}};
 
-				_control.setInputSetpoint(failsafe_setpoint);
+				if (_in_failsafe) {
+					_control.setInputSetpoint(failsafe_setpoint);
+				}
+
 				_control.setVelocityLimits(_param_mpc_xy_vel_max.get(), _param_mpc_z_vel_max_up.get(), _param_mpc_z_vel_max_dn.get());
 				_control.update(dt);
 			}
