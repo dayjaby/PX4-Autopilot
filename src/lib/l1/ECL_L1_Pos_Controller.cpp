@@ -99,7 +99,7 @@ ECL_L1_Pos_Controller::navigate_waypoints(const Vector2f &vector_A, const Vector
 	 * check if waypoints are on top of each other. If yes,
 	 * skip A and directly continue to B
 	 */
-	if (vector_AB.length() < 1.0e-6f) {
+	if (vector_AB.length() < FLT_EPSILON) {
 		vector_AB = vector_B - vector_curr_position;
 	}
 

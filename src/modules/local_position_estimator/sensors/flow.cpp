@@ -65,7 +65,7 @@ int BlockLocalPositionEstimator::flowMeasure(Vector<float, n_y_flow> &y)
 	float flow_y_rad = _sub_flow.get().pixel_flow_y_integral * _param_lpe_flw_scale.get();
 	float dt_flow = _sub_flow.get().integration_timespan / 1.0e6f;
 
-	if (dt_flow > 0.5f || dt_flow < 1.0e-6f) {
+	if (dt_flow > 0.5f || dt_flow < FLT_EPSILON) {
 		return -1;
 	}
 

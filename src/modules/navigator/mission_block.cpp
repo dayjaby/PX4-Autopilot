@@ -315,7 +315,7 @@ MissionBlock::is_mission_item_reached()
 								_navigator->get_position_setpoint_triplet()->previous.lon, _navigator->get_position_setpoint_triplet()->current.lat,
 								_navigator->get_position_setpoint_triplet()->current.lon);
 
-				if (dist_prev_to_curr > 1.0e-6f && _navigator->get_position_setpoint_triplet()->previous.valid) {
+				if (dist_prev_to_curr > FLT_EPSILON && _navigator->get_position_setpoint_triplet()->previous.valid) {
 					// Fixed-wing guidance interprets this condition as line segment following
 
 					// vector from previous waypoint to current waypoint
